@@ -26,9 +26,18 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [selectedDemoRole, setSelectedDemoRole] = useState<string | null>(null);
 
+  const ROLE_HOME_PATH: Record<string, string> = {
+    borrower: '/apply',
+    admin: '/dashboard/overview',
+    sales: '/dashboard/sales',
+    sanction: '/dashboard/sanction',
+    disbursement: '/dashboard/disbursement',
+    collection: '/dashboard/collection',
+  };
+
   useEffect(() => {
     if (user) {
-      router.replace(user.role === 'borrower' ? '/apply' : '/dashboard/overview');
+      router.replace(ROLE_HOME_PATH[user.role] || '/dashboard/overview');
     }
   }, [user, router]);
 

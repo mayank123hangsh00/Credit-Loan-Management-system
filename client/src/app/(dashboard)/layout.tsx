@@ -7,7 +7,7 @@ import { UserRole } from '@/types';
 
 const MODULE_CONFIG: Record<string, { roles: UserRole[]; label: string; icon: React.ReactNode; path: string; category: string }> = {
   overview: {
-    roles: ['admin'],
+    roles: ['admin', 'sales', 'sanction', 'disbursement', 'collection'],
     label: 'Executive Overview',
     category: 'GOVERNANCE',
     path: '/dashboard/overview',
@@ -72,7 +72,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (isLoading) return;
     if (!user) { router.replace('/login'); return; }
     if (user.role === 'borrower') { router.replace('/apply'); return; }
-  }, [user, isLoading, router]);
+
+    const activeModule = Object.values(MODULE_CONFIG).find((m) => m.path === pathname);
+    if (activeModule && !activeModule.roles.includes(user.role)) {
+      const roleHome: Record<string, string> = {
+        sales: '/dashboard/sales',
+        sanction: '/dashboard/sanction',
+        disbursement: '/dashboard/disbursement',
+        collection: '/dashboard/collection',
+      };
+      router.replace(roleHome[user.role] || '/dashboard/overview');
+    }
+  }, [user, isLoading, router, pathname]);
 
   if (isLoading || !user) {
     return (

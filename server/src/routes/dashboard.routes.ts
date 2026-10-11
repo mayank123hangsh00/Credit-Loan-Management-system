@@ -35,7 +35,11 @@ router.get('/collection/loans', rbacMiddleware(['collection', 'admin']), getColl
 router.post('/collection/:loanId/payment', rbacMiddleware(['collection', 'admin']), recordPayment);
 router.get('/collection/:loanId/payments', rbacMiddleware(['collection', 'admin']), getLoanPayments);
 
-// ── Admin Stats ─────────────────────────────────────────────
-router.get('/stats', rbacMiddleware(['admin']), getDashboardStats);
+// ── Executive & Operations Stats ─────────────────────────────
+router.get(
+  '/stats',
+  rbacMiddleware(['admin', 'sales', 'sanction', 'disbursement', 'collection']),
+  getDashboardStats
+);
 
 export default router;
