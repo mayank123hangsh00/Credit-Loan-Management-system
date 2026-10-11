@@ -5,16 +5,19 @@
 [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![Demo Video](https://img.shields.io/badge/Live%20Demo-Video%20Walkthrough-FF0000?style=for-the-badge&logo=google&logoColor=white)](https://docs.google.com/videos/d/1SLzyEydcodb_l0wSp4ivBgg6ZOw3ymqJ3hjF0ZlSOHQ/play?usp=sharing)
 
 A modern, production-grade lending platform where borrowers apply for personal loans through a guided multi-step journey with instant Business Rule Engine (BRE) eligibility feedback, and internal executives manage the loan lifecycle across Sales, Sanction, Disbursement, and Collection through role-based operations dashboards.
 
 ---
 
-### 🌐 Live Production Links
+### 🌐 Live Production Links & Video Demo
 
+- 🎥 **Live Video Walkthrough (End-to-End Demo)**: [Watch on Google Drive](https://docs.google.com/videos/d/1SLzyEydcodb_l0wSp4ivBgg6ZOw3ymqJ3hjF0ZlSOHQ/play?usp=sharing)
 - 🚀 **Live Application (Frontend)**: [https://credit-loan-management-system.vercel.app/](https://credit-loan-management-system.vercel.app/)
 - ⚡ **Live API Service (Render)**: [https://creditsea-server-eq85.onrender.com/api/health](https://creditsea-server-eq85.onrender.com/api/health)
 - 🗄️ **Cloud Database**: MongoDB Atlas (Connected & Seeded)
+- 📂 **GitHub Repository**: [mayank123hangsh00/Credit-Loan-Management-system](https://github.com/mayank123hangsh00/Credit-Loan-Management-system)
 
 ---
 
