@@ -10,6 +10,14 @@ A modern, production-grade lending platform where borrowers apply for personal l
 
 ---
 
+### 🌐 Live Production Links
+
+- 🚀 **Live Application (Frontend)**: [https://credit-loan-management-system.vercel.app/](https://credit-loan-management-system.vercel.app/)
+- ⚡ **Live API Service (Render)**: [https://creditsea-server-eq85.onrender.com/api/health](https://creditsea-server-eq85.onrender.com/api/health)
+- 🗄️ **Cloud Database**: MongoDB Atlas (Connected & Seeded)
+
+---
+
 ## 📑 Table of Contents
 
 - [Key Features](#-key-features)
