@@ -6,6 +6,15 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { AxiosError } from 'axios';
 
+const DEMO_ACCOUNTS = [
+  { role: 'Admin', email: 'admin@creditsea.com', pass: 'Admin@123', color: '#818cf8', desc: 'Full Portfolio Overview & Cross-Module Access' },
+  { role: 'Sales', email: 'sales@creditsea.com', pass: 'Sales@123', color: '#34d399', desc: 'Pre-application Leads Pipeline' },
+  { role: 'Sanction', email: 'sanction@creditsea.com', pass: 'Sanction@123', color: '#c084fc', desc: 'Underwriting & Document Assessment' },
+  { role: 'Disbursement', email: 'disbursement@creditsea.com', pass: 'Disbursement@123', color: '#fbbf24', desc: 'Capital Release Desk' },
+  { role: 'Collection', email: 'collection@creditsea.com', pass: 'Collection@123', color: '#fb7185', desc: 'Repayments & UTR Settlement' },
+  { role: 'Borrower', email: 'borrower@creditsea.com', pass: 'Borrower@123', color: '#38bdf8', desc: 'Loan Application Journey' },
+];
+
 export default function LoginPage() {
   const { login, user } = useAuth();
   const router = useRouter();
@@ -15,21 +24,28 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedDemoRole, setSelectedDemoRole] = useState<string | null>(null);
 
-  // Already logged in → redirect safely inside useEffect
   useEffect(() => {
     if (user) {
-      router.replace(user.role === 'borrower' ? '/apply' : '/dashboard');
+      router.replace(user.role === 'borrower' ? '/apply' : '/dashboard/overview');
     }
   }, [user, router]);
 
   if (user) {
     return (
       <div className="page-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-        <div className="spinner" style={{ width: 40, height: 40, borderWidth: 4 }} />
+        <div className="spinner" style={{ width: 44, height: 44, borderWidth: 4 }} />
       </div>
     );
   }
+
+  const handleSelectDemo = (acc: typeof DEMO_ACCOUNTS[0]) => {
+    setEmail(acc.email);
+    setPassword(acc.pass);
+    setSelectedDemoRole(acc.role);
+    setError('');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,178 +55,202 @@ export default function LoginPage() {
       await login(email, password);
     } catch (err) {
       const axiosErr = err as AxiosError<{ message: string }>;
-      setError(axiosErr.response?.data?.message || 'Login failed. Please try again.');
+      setError(axiosErr.response?.data?.message || 'Invalid email or password.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="page-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '1rem' }}>
-      {/* Background decoration */}
-      <div style={{
-        position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0,
-      }}>
-        <div style={{
-          position: 'absolute', top: '-20%', right: '-10%', width: 600, height: 600,
-          background: 'radial-gradient(circle, rgba(37,99,235,0.12) 0%, transparent 70%)',
-          borderRadius: '50%',
-        }} />
-        <div style={{
-          position: 'absolute', bottom: '-10%', left: '-10%', width: 500, height: 500,
-          background: 'radial-gradient(circle, rgba(124,58,237,0.1) 0%, transparent 70%)',
-          borderRadius: '50%',
-        }} />
-      </div>
+    <div style={{ minHeight: '100vh', display: 'flex', background: '#070a10', color: '#f8fafc', position: 'relative', overflow: 'hidden' }}>
+      {/* Ambient background mesh lighting */}
+      <div style={{ position: 'absolute', top: '-15%', left: '-10%', width: 700, height: 700, background: 'radial-gradient(circle, rgba(79,70,229,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '-15%', right: '-5%', width: 700, height: 700, background: 'radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-      <div className="animate-slide-up" style={{ width: '100%', maxWidth: 440, position: 'relative', zIndex: 1 }}>
-        {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            width: 56, height: 56, borderRadius: 16,
-            background: 'var(--grad-primary)',
-            marginBottom: '1rem',
-            boxShadow: '0 8px 24px rgba(37,99,235,0.35)',
-          }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="3" width="20" height="14" rx="2" />
-              <line x1="8" y1="21" x2="16" y2="21" />
-              <line x1="12" y1="17" x2="12" y2="21" />
-            </svg>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', width: '100%', maxWidth: 1280, margin: 'auto', padding: '2.5rem 1.5rem', gap: '3rem', alignItems: 'center', zIndex: 1 }}>
+        
+        {/* Left Side: Institutional Product Showcase */}
+        <div>
+          {/* Brand Tag */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', padding: '0.35rem 0.85rem', borderRadius: 9999, background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)', marginBottom: '1.5rem' }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 10px #6366f1' }} />
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.08em', color: '#a5b4fc', textTransform: 'uppercase' }}>
+              Institutional Lending Core v2.4
+            </span>
           </div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>
-            CreditSea
+
+          <h1 style={{ fontSize: '2.75rem', fontWeight: 800, lineHeight: 1.15, letterSpacing: '-0.03em', marginBottom: '1rem' }}>
+            CreditSea <span style={{ background: 'linear-gradient(135deg, #818cf8, #c084fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Operations</span>
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-            Loan Management System
-          </p>
-        </div>
 
-        {/* Card */}
-        <div className="card-glass" style={{ padding: '2rem' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-            Welcome back
-          </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '1.75rem' }}>
-            Sign in to your account to continue
+          <p style={{ color: '#94a3b8', fontSize: '1.05rem', lineHeight: 1.6, marginBottom: '2.25rem', maxWidth: 480 }}>
+            Automated lending infrastructure with sub-second Business Rule Engine (BRE), multi-tiered credit underwriting, and strict segregation of duties.
           </p>
 
-          {error && (
-            <div className="alert alert-error" style={{ marginBottom: '1.25rem' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <div className="form-group">
-              <label className="form-label" htmlFor="email">Email address</label>
-              <input
-                id="email"
-                type="email"
-                className="form-input"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label" htmlFor="password">Password</label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  className="form-input"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                  style={{ paddingRight: '3rem' }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)',
-                    background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)',
-                    display: 'flex', alignItems: 'center',
-                  }}
-                >
-                  {showPassword ? (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                  ) : (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  )}
-                </button>
+          {/* Highlights Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2.5rem', maxWidth: 500 }}>
+            <div style={{ background: 'rgba(16,22,36,0.6)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '1.1rem' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#34d399', letterSpacing: '-0.02em', fontFeatureSettings: '"tnum"' }}>
+                ₹2.5Cr+
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.2rem' }}>
+                Disbursed Facility Volume
               </div>
             </div>
 
-            <button
-              id="login-submit"
-              type="submit"
-              className="btn btn-primary btn-lg btn-full"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <><div className="spinner" /> Signing in...</>
-              ) : (
-                'Sign In'
-              )}
-            </button>
-          </form>
-
-          <div className="divider" style={{ margin: '1.5rem 0' }} />
-
-          <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-            Don&apos;t have an account?{' '}
-            <Link href="/register" style={{ color: 'var(--primary-400)', fontWeight: 600, textDecoration: 'none' }}>
-              Create one
-            </Link>
-          </p>
-        </div>
-
-        {/* Demo credentials hint */}
-        <div style={{
-          marginTop: '1.5rem', padding: '1rem 1.25rem',
-          background: 'rgba(59, 130, 246, 0.08)', borderRadius: 'var(--radius-md)',
-          border: '1px solid rgba(59, 130, 246, 0.2)',
-        }}>
-          <p style={{ fontSize: '0.75rem', color: 'var(--primary-300)', fontWeight: 600, marginBottom: '0.5rem' }}>
-            🔑 Demo Credentials
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.25rem 1rem' }}>
-            {[
-              ['Admin', 'admin@creditsea.com', 'Admin@123'],
-              ['Borrower', 'borrower@creditsea.com', 'Borrower@123'],
-              ['Sales', 'sales@creditsea.com', 'Sales@123'],
-              ['Sanction', 'sanction@creditsea.com', 'Sanction@123'],
-              ['Disbursement', 'disbursement@creditsea.com', 'Disbursement@123'],
-              ['Collection', 'collection@creditsea.com', 'Collection@123'],
-            ].map(([role, em, pw]) => (
-              <button
-                key={role}
-                onClick={() => { setEmail(em); setPassword(pw); }}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
-                  padding: '0.2rem 0', fontSize: '0.72rem', color: 'var(--text-secondary)',
-                  transition: 'color var(--transition-fast)',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--primary-300)')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
-              >
-                <span style={{ fontWeight: 600 }}>{role}</span>
-              </button>
-            ))}
+            <div style={{ background: 'rgba(16,22,36,0.6)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '1.1rem' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#818cf8', letterSpacing: '-0.02em' }}>
+                100% Automated
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.2rem' }}>
+                Server & Client BRE Checks
+              </div>
+            </div>
           </div>
-          <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-            Click a role to auto-fill credentials
-          </p>
+
+          {/* Trust badges */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', color: '#64748b', fontSize: '0.8rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>256-Bit TLS Encryption</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              <span>MongoDB Atlas Clustered</span>
+            </div>
+          </div>
         </div>
+
+        {/* Right Side: Authentication Box & 1-Click Role Switcher */}
+        <div style={{ width: '100%', maxWidth: 480 }}>
+          <div className="card-glass" style={{ padding: '2.25rem', borderRadius: 20 }}>
+            <div style={{ marginBottom: '1.75rem' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: '0.35rem' }}>
+                Sign In to Platform
+              </h2>
+              <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
+                Choose an evaluation role below or sign in manually.
+              </p>
+            </div>
+
+            {/* 1-Click Role Selector Chips */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ fontSize: '0.725rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.65rem' }}>
+                ⚡ 1-Click Role Switcher (For Evaluators)
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                {DEMO_ACCOUNTS.map((acc) => {
+                  const isSelected = selectedDemoRole === acc.role;
+                  return (
+                    <button
+                      key={acc.role}
+                      type="button"
+                      onClick={() => handleSelectDemo(acc)}
+                      style={{
+                        padding: '0.6rem 0.5rem',
+                        borderRadius: 10,
+                        background: isSelected ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.03)',
+                        border: isSelected ? `1.5px solid ${acc.color}` : '1px solid rgba(255,255,255,0.07)',
+                        color: isSelected ? '#fff' : '#94a3b8',
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      <div style={{ fontSize: '0.8rem', fontWeight: 700, color: acc.color }}>
+                        {acc.role}
+                      </div>
+                      <div style={{ fontSize: '0.65rem', color: '#64748b', marginTop: '0.15rem' }}>
+                        Click to Fill
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {error && (
+              <div className="alert alert-error" style={{ marginBottom: '1.25rem' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span>{error}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
+              <div className="form-group">
+                <label className="form-label" htmlFor="login-email">
+                  Email Address
+                </label>
+                <input
+                  id="login-email"
+                  type="email"
+                  className="form-input"
+                  placeholder="executive@creditsea.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="login-password">
+                  Password
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="login-password"
+                    type={showPassword ? 'text' : 'password'}
+                    className="form-input"
+                    placeholder="Enter password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    style={{ paddingRight: '2.5rem' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 4,
+                    }}
+                  >
+                    {showPassword ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                id="login-submit"
+                className="btn btn-primary btn-full"
+                disabled={isLoading}
+                style={{ padding: '0.85rem', marginTop: '0.5rem', fontSize: '0.95rem' }}
+              >
+                {isLoading ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div className="spinner" />
+                    <span>Signing In...</span>
+                  </div>
+                ) : (
+                  'Sign In to Dashboard →'
+                )}
+              </button>
+            </form>
+
+            <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.85rem', color: '#64748b' }}>
+              Are you a new borrower?{' '}
+              <Link href="/register" style={{ color: '#818cf8', fontWeight: 600, textDecoration: 'none' }}>
+                Create Borrower Account
+              </Link>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );

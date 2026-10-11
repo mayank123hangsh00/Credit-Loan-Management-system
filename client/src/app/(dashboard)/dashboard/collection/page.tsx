@@ -31,7 +31,7 @@ export default function CollectionPage() {
     setIsLoading(true);
     api.get<{ loans: CollectionLoan[] }>('/dashboard/collection/loans')
       .then(({ data }) => setLoans(data.loans))
-      .catch(() => setError('Failed to fetch loans.'))
+      .catch(() => setError('Failed to fetch collections desk.'))
       .finally(() => setIsLoading(false));
   };
 
@@ -61,10 +61,10 @@ export default function CollectionPage() {
     setPaymentError('');
 
     const amount = Number(paymentForm.amount);
-    if (!paymentForm.utrNumber.trim()) { setPaymentError('UTR number is required.'); return; }
-    if (!amount || amount <= 0) { setPaymentError('Enter a valid amount.'); return; }
+    if (!paymentForm.utrNumber.trim()) { setPaymentError('Unique UTR number is required.'); return; }
+    if (!amount || amount <= 0) { setPaymentError('Enter a valid payment amount.'); return; }
     if (amount > paymentModal.loan.outstandingBalance) {
-      setPaymentError(`Amount cannot exceed outstanding balance of ${formatCurrency(paymentModal.loan.outstandingBalance)}`);
+      setPaymentError(`Payment cannot exceed outstanding balance of ${formatCurrency(paymentModal.loan.outstandingBalance)}`);
       return;
     }
 
@@ -77,19 +77,18 @@ export default function CollectionPage() {
       });
 
       if (data.loanClosed) {
-        showToast('🎉 Payment recorded! Loan fully repaid and CLOSED!');
+        showToast('🎉 Payment logged! Outstanding balance reached ₹0 — Facility AUTO-CLOSED!');
       } else {
         showToast(`Payment of ${formatCurrency(amount)} recorded. Outstanding: ${formatCurrency(data.loan.outstandingBalance)}`);
       }
 
       setPaymentModal(null);
       setPaymentForm({ utrNumber: '', amount: '', date: new Date().toISOString().slice(0, 10) });
-      // Clear payment cache for this loan
       setLoanPayments(prev => { const n = { ...prev }; delete n[paymentModal.loan._id]; return n; });
       fetchLoans();
     } catch (err) {
       const axiosErr = err as AxiosError<{ message: string }>;
-      setPaymentError(axiosErr.response?.data?.message || 'Failed to record payment.');
+      setPaymentError(axiosErr.response?.data?.message || 'Failed to record payment transaction.');
     } finally {
       setPaymentLoading(false);
     }
@@ -101,96 +100,161 @@ export default function CollectionPage() {
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
+    <div style={{ padding: '2.5rem', maxWidth: 1400, margin: '0 auto' }}>
+      
+      {/* Toast Notification (Fixed bottom-right so it NEVER overlaps buttons) */}
       {toast && (
-        <div style={{ position: 'fixed', top: '1.5rem', right: '1.5rem', zIndex: 100, animation: 'slideIn 0.3s both' }}>
-          <div className={`alert ${toast.type === 'success' ? 'alert-success' : 'alert-error'}`} style={{ minWidth: 300, boxShadow: 'var(--shadow-lg)' }}>
+        <div className="toast-fixed">
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: toast.type === 'success' ? '#34d399' : '#fb7185', boxShadow: `0 0 10px ${toast.type === 'success' ? '#34d399' : '#fb7185'}` }} />
+          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#f8fafc', flex: 1 }}>
             {toast.msg}
-          </div>
+          </span>
+          <button
+            onClick={() => setToast(null)}
+            style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 2, fontSize: '1rem' }}
+          >
+            ×
+          </button>
         </div>
       )}
 
-      {/* Payment Modal */}
+      {/* Payment Recording Modal */}
       {paymentModal && (
         <div className="modal-overlay" onClick={() => setPaymentModal(null)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.25rem' }}>Record Payment</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginBottom: '1.25rem' }}>
-              Loan: {formatCurrency(paymentModal.loan.loanAmount)} · Outstanding: <strong style={{ color: 'var(--danger-400)' }}>{formatCurrency(paymentModal.loan.outstandingBalance)}</strong>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+              <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(16,185,129,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#34d399' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Record EMI / Settlement</h3>
+            </div>
+            
+            <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.25rem' }}>
+              Facility: {formatCurrency(paymentModal.loan.loanAmount)} · Outstanding: <strong style={{ color: '#fb7185' }}>{formatCurrency(paymentModal.loan.outstandingBalance)}</strong>
             </p>
 
             {paymentError && (
-              <div className="alert alert-error" style={{ marginBottom: '1rem', fontSize: '0.85rem' }}>
+              <div className="alert alert-error" style={{ marginBottom: '1.25rem', fontSize: '0.85rem' }}>
                 {paymentError}
               </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
               <div className="form-group">
-                <label className="form-label" htmlFor="utr">UTR Number *</label>
-                <input id="utr" type="text" className="form-input" placeholder="e.g. UTR123456789" value={paymentForm.utrNumber} onChange={(e) => setPaymentForm(p => ({ ...p, utrNumber: e.target.value.toUpperCase() }))} />
-                <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Must be unique across all payments</p>
+                <label className="form-label" htmlFor="utr">Unique UTR / Ref Number *</label>
+                <input
+                  id="utr"
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g., UTR9876543210"
+                  value={paymentForm.utrNumber}
+                  onChange={(e) => setPaymentForm(p => ({ ...p, utrNumber: e.target.value.toUpperCase() }))}
+                />
+                <p style={{ fontSize: '0.725rem', color: '#64748b' }}>Must be unique across all database payments</p>
               </div>
+
               <div className="form-group">
-                <label className="form-label" htmlFor="pay-amount">Amount (₹) *</label>
-                <input id="pay-amount" type="number" className="form-input" placeholder={`Max: ₹${paymentModal.loan.outstandingBalance.toLocaleString('en-IN')}`} value={paymentForm.amount} onChange={(e) => setPaymentForm(p => ({ ...p, amount: e.target.value }))} min="1" max={paymentModal.loan.outstandingBalance} />
+                <label className="form-label" htmlFor="pay-amount">Repayment Amount (₹) *</label>
+                <input
+                  id="pay-amount"
+                  type="number"
+                  className="form-input"
+                  placeholder={`Max: ₹${paymentModal.loan.outstandingBalance.toLocaleString('en-IN')}`}
+                  value={paymentForm.amount}
+                  onChange={(e) => setPaymentForm(p => ({ ...p, amount: e.target.value }))}
+                  min="1"
+                  max={paymentModal.loan.outstandingBalance}
+                />
               </div>
+
               <div className="form-group">
-                <label className="form-label" htmlFor="pay-date">Payment Date *</label>
-                <input id="pay-date" type="date" className="form-input" value={paymentForm.date} onChange={(e) => setPaymentForm(p => ({ ...p, date: e.target.value }))} max={new Date().toISOString().slice(0, 10)} />
+                <label className="form-label" htmlFor="pay-date">Transaction Date *</label>
+                <input
+                  id="pay-date"
+                  type="date"
+                  className="form-input"
+                  value={paymentForm.date}
+                  onChange={(e) => setPaymentForm(p => ({ ...p, date: e.target.value }))}
+                  max={new Date().toISOString().slice(0, 10)}
+                />
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: '0.85rem', marginTop: '1.75rem', justifyContent: 'flex-end' }}>
               <button className="btn btn-secondary" onClick={() => { setPaymentModal(null); setPaymentError(''); }}>Cancel</button>
-              <button id="record-payment-btn" className="btn btn-success" onClick={handleRecordPayment} disabled={paymentLoading}>
-                {paymentLoading ? <><div className="spinner" /> Recording...</> : '✅ Record Payment'}
+              <button
+                id="record-payment-btn"
+                className="btn btn-success"
+                onClick={handleRecordPayment}
+                disabled={paymentLoading}
+              >
+                {paymentLoading ? <><div className="spinner" /> Logging Transaction...</> : '✓ Reconcile & Record Payment'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+      {/* Page Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2.25rem', flexWrap: 'wrap', gap: '1.25rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.25rem' }}>Collection — Repayments</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-            Track and record repayments for active and closed loans.
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0.75rem', borderRadius: 9999, background: 'rgba(251,113,133,0.12)', border: '1px solid rgba(251,113,133,0.25)', marginBottom: '0.65rem' }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fb7185', boxShadow: '0 0 6px #fb7185' }} />
+            <span style={{ fontSize: '0.725rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#fb7185' }}>
+              Collections & Servicing
+            </span>
+          </div>
+          <h1 style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.03em' }}>
+            Loan Servicing & Repayments
+          </h1>
+          <p style={{ color: '#94a3b8', fontSize: '0.925rem', marginTop: '0.25rem' }}>
+            Monitor active repayments, log incoming UTR bank transfers, and audit auto-closed facilities.
           </p>
         </div>
-        <button className="btn btn-secondary btn-sm" onClick={fetchLoans}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
-          Refresh
+
+        <button className="btn btn-secondary btn-sm" onClick={fetchLoans} disabled={isLoading} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.55rem 1rem' }}>
+          <svg className={isLoading ? 'animate-spin' : ''} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>
+          </svg>
+          <span>Refresh Desk</span>
         </button>
       </div>
 
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-        {[
-          ['Active Loans', loans.filter(l => l.status === 'DISBURSED').length, '#f87171'],
-          ['Closed Loans', loans.filter(l => l.status === 'CLOSED').length, 'var(--success-400)'],
-          ['Total Loans', loans.length, 'var(--primary-400)'],
-        ].map(([label, value, color]) => (
-          <div key={String(label)} className="stat-card">
-            <p style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>{label}</p>
-            <p style={{ fontSize: '2rem', fontWeight: 800, color: String(color) }}>{value}</p>
-          </div>
-        ))}
+      {/* Stats Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+        <div className="stat-card" style={{ background: 'linear-gradient(145deg, rgba(244,63,94,0.08) 0%, rgba(14,20,34,0.9) 100%)', border: '1px solid rgba(244,63,94,0.22)' }}>
+          <p style={{ fontSize: '0.725rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>Active Disbursed Facilities</p>
+          <p style={{ fontSize: '2.25rem', fontWeight: 800, color: '#fb7185' }}>{loans.filter(l => l.status === 'DISBURSED').length}</p>
+        </div>
+        <div className="stat-card" style={{ background: 'linear-gradient(145deg, rgba(16,185,129,0.08) 0%, rgba(14,20,34,0.9) 100%)', border: '1px solid rgba(16,185,129,0.22)' }}>
+          <p style={{ fontSize: '0.725rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>Auto-Closed Facilities</p>
+          <p style={{ fontSize: '2.25rem', fontWeight: 800, color: '#34d399' }}>{loans.filter(l => l.status === 'CLOSED').length}</p>
+        </div>
+        <div className="stat-card">
+          <p style={{ fontSize: '0.725rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>Total Serviced Portfolio</p>
+          <p style={{ fontSize: '2.25rem', fontWeight: 800, color: '#818cf8' }}>{loans.length}</p>
+        </div>
       </div>
 
       {isLoading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}><div className="spinner" style={{ width: 40, height: 40, borderWidth: 4 }} /></div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '6rem 0', gap: '1rem' }}>
+          <div className="spinner" style={{ width: 44, height: 44, borderWidth: 4 }} />
+          <span style={{ fontSize: '0.875rem', color: '#64748b' }}>Loading collections ledger...</span>
+        </div>
       ) : error ? (
         <div className="alert alert-error">{error}</div>
       ) : loans.length === 0 ? (
-        <div className="card empty-state">
-          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-          <h3>No active loans</h3>
-          <p>No disbursed loans found for collection.</p>
+        <div className="card-glass" style={{ padding: '4rem 2rem', textAlign: 'center', borderRadius: 20 }}>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem', color: '#818cf8' }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          </div>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.35rem' }}>No Active Loans in Collection</h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.9rem', maxWidth: 400, margin: '0 auto' }}>
+            Disbursed facilities will automatically flow into this servicing queue.
+          </p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {loans.map((loan) => {
             const borrower = loan.borrower as User;
             const pct = progressPct(loan);
@@ -198,37 +262,56 @@ export default function CollectionPage() {
             const isClosed = loan.status === 'CLOSED';
 
             return (
-              <div key={loan._id} className="card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-                  <div style={{ flex: 1 }}>
+              <div key={loan._id} className="card-glass" style={{ padding: '1.75rem', borderRadius: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1.25rem' }}>
+                  <div style={{ flex: 1, minWidth: 280 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
-                      <h3 style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '1rem' }}>
+                      <h3 style={{ fontWeight: 800, color: '#fff', fontSize: '1.1rem' }}>
                         {borrower.fullName || borrower.email}
                       </h3>
                       <span className={`badge badge-${loan.status.toLowerCase()}`}>{loan.status}</span>
                     </div>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-                      Loan: {formatCurrency(loan.loanAmount)} · Total Repayment: {formatCurrency(loan.totalRepayment)}
+
+                    <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '1rem' }}>
+                      Principal: <strong style={{ color: '#fff' }}>{formatCurrency(loan.loanAmount)}</strong> · Total Due: <strong style={{ color: '#c084fc' }}>{formatCurrency(loan.totalRepayment)}</strong>
                     </p>
 
-                    {/* Progress bar */}
-                    <div style={{ marginBottom: '0.4rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Repayment progress</span>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: isClosed ? 'var(--success-400)' : 'var(--primary-400)' }}>{pct}%</span>
+                    {/* Shimmer Repayment Progress Bar */}
+                    <div style={{ marginBottom: '0.75rem', maxWidth: 540 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem', fontSize: '0.75rem' }}>
+                        <span style={{ color: '#64748b' }}>Repayment Progress</span>
+                        <span style={{ fontWeight: 700, color: isClosed ? '#34d399' : '#818cf8' }}>{pct}% Completed</span>
                       </div>
-                      <div className="progress-bar">
-                        <div className="progress-fill" style={{ width: `${pct}%`, background: isClosed ? 'var(--grad-success)' : 'var(--grad-primary)' }} />
+                      <div style={{ height: 8, background: 'rgba(255,255,255,0.06)', borderRadius: 9999, overflow: 'hidden' }}>
+                        <div
+                          style={{
+                            height: '100%',
+                            width: `${pct}%`,
+                            background: isClosed ? 'linear-gradient(90deg, #059669, #10b981)' : 'linear-gradient(90deg, #4f46e5, #06b6d4)',
+                            borderRadius: 9999,
+                            transition: 'width 0.4s ease',
+                          }}
+                        />
                       </div>
                     </div>
-                    <p style={{ fontSize: '0.8rem', color: isClosed ? 'var(--success-400)' : 'var(--danger-400)', fontWeight: 600 }}>
-                      {isClosed ? '✅ Fully repaid' : `Outstanding: ${formatCurrency(loan.outstandingBalance)}`}
-                    </p>
+
+                    <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                      {isClosed ? (
+                        <span style={{ color: '#34d399', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span>✓ Fully Reconciled & Closed</span>
+                        </span>
+                      ) : (
+                        <span>
+                          <span style={{ color: '#64748b' }}>Outstanding Balance: </span>
+                          <strong style={{ color: '#fb7185', fontFeatureSettings: '"tnum"' }}>{formatCurrency(loan.outstandingBalance)}</strong>
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div style={{ display: 'flex', gap: '0.75rem', flexShrink: 0, alignItems: 'flex-start' }}>
                     <button className="btn btn-secondary btn-sm" onClick={() => toggleExpand(loan._id)}>
-                      {isExpanded ? '▲ Hide History' : '▼ View History'}
+                      {isExpanded ? '▲ Hide Ledger' : '▼ Audit Ledger'}
                     </button>
                     {!isClosed && (
                       <button
@@ -242,29 +325,34 @@ export default function CollectionPage() {
                   </div>
                 </div>
 
-                {/* Payment History */}
+                {/* Ledger & Payment History Drawer */}
                 {isExpanded && (
-                  <div style={{ marginTop: '1.25rem', borderTop: '1px solid var(--bg-border)', paddingTop: '1.25rem' }}>
-                    <h4 style={{ fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.875rem', color: 'var(--text-secondary)' }}>
-                      Payment History
+                  <div style={{ marginTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '1.5rem' }}>
+                    <h4 style={{ fontSize: '0.875rem', fontWeight: 700, marginBottom: '1rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      Reconciled Transactions Audit Ledger
                     </h4>
                     {!loanPayments[loan._id] ? (
-                      <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem' }}><div className="spinner" /></div>
+                      <div style={{ display: 'flex', justifyContent: 'center', padding: '1.5rem' }}><div className="spinner" /></div>
                     ) : loanPayments[loan._id].length === 0 ? (
-                      <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>No payments recorded yet.</p>
+                      <p style={{ color: '#64748b', fontSize: '0.875rem' }}>No payment entries logged yet for this facility.</p>
                     ) : (
-                      <div className="table-wrapper">
-                        <table className="data-table" style={{ fontSize: '0.8rem' }}>
+                      <div style={{ background: 'rgba(14,20,34,0.7)', borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.825rem' }}>
                           <thead>
-                            <tr><th>UTR Number</th><th>Amount</th><th>Date</th><th>Recorded By</th></tr>
+                            <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                              <th style={{ padding: '0.75rem 1rem', color: '#64748b', textAlign: 'left', fontWeight: 700 }}>UTR Number</th>
+                              <th style={{ padding: '0.75rem 1rem', color: '#64748b', textAlign: 'left', fontWeight: 700 }}>Amount</th>
+                              <th style={{ padding: '0.75rem 1rem', color: '#64748b', textAlign: 'left', fontWeight: 700 }}>Payment Date</th>
+                              <th style={{ padding: '0.75rem 1rem', color: '#64748b', textAlign: 'left', fontWeight: 700 }}>Reconciled By</th>
+                            </tr>
                           </thead>
                           <tbody>
                             {loanPayments[loan._id].map((p) => (
-                              <tr key={p._id}>
-                                <td style={{ fontFamily: 'monospace', color: 'var(--primary-300)' }}>{p.utrNumber}</td>
-                                <td style={{ fontWeight: 600, color: 'var(--success-400)' }}>{formatCurrency(p.amount)}</td>
-                                <td style={{ color: 'var(--text-secondary)' }}>{formatDate(p.date)}</td>
-                                <td style={{ color: 'var(--text-secondary)' }}>{(p.recordedBy as User)?.fullName || '—'}</td>
+                              <tr key={p._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace', color: '#a5b4fc', fontWeight: 600 }}>{p.utrNumber}</td>
+                                <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: '#34d399', fontFeatureSettings: '"tnum"' }}>{formatCurrency(p.amount)}</td>
+                                <td style={{ padding: '0.75rem 1rem', color: '#94a3b8' }}>{formatDate(p.date)}</td>
+                                <td style={{ padding: '0.75rem 1rem', color: '#64748b' }}>{(p.recordedBy as User)?.fullName || 'Collection Desk'}</td>
                               </tr>
                             ))}
                           </tbody>
