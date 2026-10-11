@@ -16,7 +16,7 @@ const app = express();
 // ── Middleware ────────────────────────────────────────────────
 app.use(
   cors({
-    origin: (origin, callback) => {
+    origin: (_origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
       // Allow all origins (reflection) to support Vercel deployments and localhost
       callback(null, true);
     },
